@@ -1,0 +1,1262 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Train Ticket Booking System</title>
+
+    <style>
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #f2f2f2;
+            margin: 0;
+            padding: 0;
+        }
+
+        header {
+            background: #0f9d58;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        nav {
+            background: #222;
+            padding: 10px;
+            text-align: center;
+        }
+
+        nav button {
+            margin: 5px;
+        }
+
+        .search-box {
+            width: 80%;
+            max-width: 700px;
+            margin: 30px auto;
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px #ccc;
+        }
+
+        input {
+            padding: 12px;
+            margin: 8px;
+            width: 90%;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-sizing: border-box;
+        }
+
+        button {
+            padding: 12px 20px;
+            background: #0f9d58;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #087f46;
+        }
+
+        .train-card,
+        .booking-card {
+            background: #f8f8f8;
+            margin: 15px 0;
+            padding: 18px;
+            border-left: 5px solid #0f9d58;
+            border-radius: 5px;
+        }
+
+        .time {
+            font-size: 18px;
+            font-weight: bold;
+            color: #0f9d58;
+        }
+
+        .message {
+            padding: 15px;
+            margin-top: 15px;
+            background: #e8f5e9;
+            border-radius: 5px;
+        }
+
+        /* SEAT POPUP */
+
+        .seat-modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+        }
+
+        .seat-box {
+            background: white;
+            width: 360px;
+            max-width: 90%;
+            margin: 60px auto;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .coach {
+            border: 3px solid #555;
+            border-radius: 12px;
+            padding: 15px;
+            margin: 15px auto;
+            width: 270px;
+        }
+
+        .coach-title {
+            font-weight: bold;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+
+        .seat-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr 25px 1fr 1fr;
+            gap: 6px;
+            margin: 7px 0;
+        }
+
+        .seat {
+            padding: 8px 3px;
+            border-radius: 5px;
+            color: white;
+            font-size: 13px;
+            cursor: pointer;
+            background: #28a745;
+        }
+
+        .seat.booked {
+            background: #dc3545;
+            cursor: not-allowed;
+        }
+
+        .seat.selected {
+            background: #007bff;
+        }
+
+        .seat:hover {
+            opacity: 0.8;
+        }
+
+        .seat-legend {
+            margin: 10px 0;
+            font-size: 13px;
+        }
+
+        .legend-green {
+            color: #28a745;
+            font-weight: bold;
+        }
+
+        .legend-red {
+            color: #dc3545;
+            font-weight: bold;
+        }
+
+        .legend-blue {
+            color: #007bff;
+            font-weight: bold;
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+<header>
+
+    <h1>🚆 Train Ticket Booking System</h1>
+
+    <p>Welcome to Train Booking Dashboard</p>
+
+</header>
+
+
+<nav>
+
+    <button onclick="showSection('searchSection')">
+        🔍 Search Train
+    </button>
+
+    <button onclick="showSection('bookingSection')">
+        🎫 Book Ticket
+    </button>
+
+    <button onclick="showSection('cancelSection')">
+        ❌ Cancel Ticket
+    </button>
+
+    <button onclick="showSection('bookingListSection'); viewBookings()">
+        📋 View Bookings
+    </button>
+
+    <button onclick="logout()">
+        🚪 Logout
+    </button>
+
+</nav>
+
+
+<!-- SEARCH -->
+
+<div id="searchSection"
+     class="search-box"
+     style="display:none;">
+
+    <h2>🔍 Search Train</h2>
+
+    <input
+        type="text"
+        id="source"
+        placeholder="Enter Source">
+
+    <input
+        type="text"
+        id="destination"
+        placeholder="Enter Destination">
+
+    <button onclick="searchTrains()">
+        Search
+    </button>
+
+    <div id="result"></div>
+
+</div>
+
+
+<!-- BOOKING -->
+
+<div id="bookingSection"
+     class="search-box"
+     style="display:none;">
+
+    <h2>🎫 Book Ticket</h2>
+
+    <p>
+        <b>Journey:</b>
+
+        <span id="selectedJourney">
+            Please search a train first
+        </span>
+    </p>
+
+    <input
+        type="text"
+        id="passengerName"
+        placeholder="Passenger Name">
+
+    <input
+        type="number"
+        id="age"
+        placeholder="Age">
+
+    <input
+        type="text"
+        id="contact"
+        placeholder="Contact Number">
+
+    <input
+        type="text"
+        id="trainName"
+        placeholder="Train Name">
+
+    <br><br>
+
+    <button onclick="openSeatPopup()">
+        🪑 Select Seat
+    </button>
+
+    <p>
+        <b>Selected Seat:</b>
+
+        <span id="bookingSelectedSeat">
+            None
+        </span>
+    </p>
+
+    <button onclick="bookTicket()">
+        Book Ticket
+    </button>
+
+    <div id="bookingResult"></div>
+
+</div>
+
+
+<!-- CANCEL -->
+
+<div id="cancelSection"
+     class="search-box"
+     style="display:none;">
+
+    <h2>❌ Cancel Ticket</h2>
+
+    <input
+        type="number"
+        id="cancelTrainNumber"
+        placeholder="Train Number">
+
+    <input
+        type="text"
+        id="cancelPassengerName"
+        placeholder="Passenger Name">
+
+    <br><br>
+
+    <button onclick="cancelTicket()">
+        Cancel Ticket
+    </button>
+
+    <div id="cancelResult"></div>
+
+</div>
+
+
+<!-- VIEW BOOKINGS -->
+
+<div id="bookingListSection"
+     class="search-box"
+     style="display:none;">
+
+    <h2>📋 My Bookings</h2>
+
+    <div id="bookingList"></div>
+
+</div>
+
+
+<!-- SEAT POPUP -->
+
+<div id="seatModal" class="seat-modal">
+
+    <div class="seat-box">
+
+        <h2>🚆 Select Seat</h2>
+
+        <div class="seat-legend">
+
+            <span class="legend-green">
+                🟩 Available
+            </span>
+
+            &nbsp;
+
+            <span class="legend-red">
+                🟥 Booked
+            </span>
+
+            &nbsp;
+
+            <span class="legend-blue">
+                🔵 Selected
+            </span>
+
+        </div>
+
+
+        <div class="coach">
+
+            <div class="coach-title">
+                TRAIN COACH
+            </div>
+
+            <div id="seatLayout"></div>
+
+        </div>
+
+
+        <p>
+            <b>Selected Seat:</b>
+
+            <span id="selectedSeatText">
+                None
+            </span>
+        </p>
+
+
+        <button onclick="confirmSeat()">
+            Confirm Seat
+        </button>
+
+        <button
+            onclick="closeSeatPopup()"
+            style="background:#777;">
+
+            Close
+
+        </button>
+
+    </div>
+
+</div>
+
+
+<script>
+
+let selectedSource = "";
+let selectedDestination = "";
+
+let selectedTrainNumber = 0;
+
+let selectedSeat = 0;
+let confirmedSeat = 0;
+
+
+/* SHOW SECTION */
+
+function showSection(sectionId) {
+
+    document.getElementById("searchSection")
+        .style.display = "none";
+
+    document.getElementById("bookingSection")
+        .style.display = "none";
+
+    document.getElementById("cancelSection")
+        .style.display = "none";
+
+    document.getElementById("bookingListSection")
+        .style.display = "none";
+
+    document.getElementById(sectionId)
+        .style.display = "block";
+}
+
+
+/* SEARCH TRAIN */
+
+function searchTrains() {
+
+    let source =
+        document.getElementById("source")
+        .value.trim();
+
+    let destination =
+        document.getElementById("destination")
+        .value.trim();
+
+
+    if (source === "" || destination === "") {
+
+        document.getElementById("result").innerHTML =
+            "<p>Please enter Source and Destination.</p>";
+
+        return;
+    }
+
+
+    selectedSource = source;
+    selectedDestination = destination;
+
+
+    document.getElementById("selectedJourney")
+        .innerHTML =
+        selectedSource + " → " + selectedDestination;
+
+
+    fetch(
+        "/api/trains/search?source="
+        + encodeURIComponent(source)
+        + "&destination="
+        + encodeURIComponent(destination)
+    )
+
+    .then(response => {
+
+        if (!response.ok) {
+            throw new Error("Server error");
+        }
+
+        return response.json();
+
+    })
+
+    .then(trains => {
+
+        let result =
+            document.getElementById("result");
+
+        result.innerHTML = "";
+
+
+        if (trains.length === 0) {
+
+            result.innerHTML =
+                "<p>No trains found for this route.</p>";
+
+            return;
+        }
+
+
+        trains.forEach(train => {
+
+            result.innerHTML += `
+
+                <div class="train-card">
+
+                    <h3>
+                        🚆 ${train.name}
+                    </h3>
+
+                    <p>
+                        <b>Train Number:</b>
+                        ${train.number}
+                    </p>
+
+                    <p>
+                        <b>Route:</b>
+                        ${train.source}
+                        → ${train.destination}
+                    </p>
+
+                    <p class="time">
+                        🕐 Departure:
+                        ${train.departureTime}
+                    </p>
+
+                    <p class="time">
+                        🕐 Arrival:
+                        ${train.arrivalTime}
+                    </p>
+
+                    <p>
+                        <b>Available Seats:</b>
+                        ${train.availableSeats}
+                    </p>
+
+                    <button
+                        onclick="selectTrainByNumber(${train.number})">
+
+                        Select Train
+
+                    </button>
+
+                </div>
+
+            `;
+
+        });
+
+    })
+
+    .catch(error => {
+
+        document.getElementById("result").innerHTML =
+            "<p style='color:red;'>Cannot connect to Java backend.</p>";
+
+        console.error(error);
+
+    });
+
+}
+
+
+/* SELECT TRAIN */
+
+function selectTrainByNumber(trainNumber) {
+
+    fetch("/api/trains")
+
+    .then(response => response.json())
+
+    .then(trains => {
+
+        let train = trains.find(
+            t => t.number === trainNumber
+        );
+
+        if (!train) {
+
+            document.getElementById("bookingResult").innerHTML =
+                "<p style='color:red;'>Train not found.</p>";
+
+            return;
+        }
+
+
+        document.getElementById("trainName")
+            .value = train.name;
+
+        selectedTrainNumber = train.number;
+
+        selectedSeat = 0;
+        confirmedSeat = 0;
+
+
+        document.getElementById("bookingSelectedSeat")
+            .innerText = "None";
+
+
+        document.getElementById("bookingResult")
+            .innerHTML =
+            "<div class='message'>Train selected: "
+            + train.name
+            + "</div>";
+
+
+        showSection("bookingSection");
+
+    })
+
+    .catch(error => {
+
+        console.error(error);
+
+        document.getElementById("bookingResult")
+            .innerHTML =
+            "<p style='color:red;'>Cannot load train.</p>";
+
+    });
+
+}
+
+
+/* OPEN SEAT POPUP */
+
+function openSeatPopup() {
+
+    let trainName =
+        document.getElementById("trainName")
+        .value.trim();
+
+
+    if (trainName === "") {
+
+        document.getElementById("bookingResult")
+            .innerHTML =
+            "<p style='color:red;'>Please enter Train Name.</p>";
+
+        return;
+    }
+
+
+    if (selectedTrainNumber === 0) {
+
+        fetch("/api/trains")
+
+        .then(response => {
+
+            if (!response.ok) {
+                throw new Error("Server error");
+            }
+
+            return response.json();
+
+        })
+
+        .then(trains => {
+
+            let foundTrain = trains.find(
+                train =>
+                    train.name.toLowerCase()
+                    === trainName.toLowerCase()
+            );
+
+
+            if (!foundTrain) {
+
+                document.getElementById("bookingResult")
+                    .innerHTML =
+                    "<p style='color:red;'>Train not found. Please enter the correct train name.</p>";
+
+                return;
+            }
+
+
+            selectedTrainNumber =
+                foundTrain.number;
+
+
+            loadSeats();
+
+        })
+
+        .catch(error => {
+
+            document.getElementById("bookingResult")
+                .innerHTML =
+                "<p style='color:red;'>Cannot connect to Java backend.</p>";
+
+            console.error(error);
+
+        });
+
+    }
+
+    else {
+
+        loadSeats();
+
+    }
+
+}
+
+
+/* LOAD SEATS */
+
+function loadSeats() {
+
+    selectedSeat = 0;
+
+    document.getElementById("selectedSeatText")
+        .innerText = "None";
+
+
+    fetch(
+        "/api/trains/seats?trainNumber="
+        + selectedTrainNumber
+    )
+
+    .then(response => {
+
+        if (!response.ok) {
+            throw new Error("Server error");
+        }
+
+        return response.json();
+
+    })
+
+    .then(bookedSeats => {
+
+        let layout =
+            document.getElementById("seatLayout");
+
+        layout.innerHTML = "";
+
+
+        let booked =
+            new Set(bookedSeats);
+
+
+        for (let row = 0; row < 5; row++) {
+
+            let rowDiv =
+                document.createElement("div");
+
+            rowDiv.className = "seat-row";
+
+
+            for (let col = 0; col < 4; col++) {
+
+                let seatNumber =
+                    row * 4 + col + 1;
+
+
+                let seat =
+                    document.createElement("div");
+
+                seat.className = "seat";
+
+                seat.innerText =
+                    seatNumber;
+
+
+                if (booked.has(seatNumber)) {
+
+                    seat.classList.add("booked");
+
+                }
+
+                else {
+
+                    seat.onclick = function() {
+
+                        selectSeat(
+                            seatNumber,
+                            seat
+                        );
+
+                    };
+
+                }
+
+
+                rowDiv.appendChild(seat);
+
+
+                if (col === 1) {
+
+                    let aisle =
+                        document.createElement("div");
+
+                    rowDiv.appendChild(aisle);
+
+                }
+
+            }
+
+
+            layout.appendChild(rowDiv);
+
+        }
+
+
+        document.getElementById("seatModal")
+            .style.display = "block";
+
+    })
+
+    .catch(error => {
+
+        document.getElementById("bookingResult")
+            .innerHTML =
+            "<p style='color:red;'>Cannot load seats.</p>";
+
+        console.error(error);
+
+    });
+
+}
+
+
+/* SELECT SEAT */
+
+function selectSeat(seatNumber, seatElement) {
+
+    document.querySelectorAll(".seat.selected")
+        .forEach(seat => {
+
+            seat.classList.remove("selected");
+
+        });
+
+
+    seatElement.classList.add("selected");
+
+
+    selectedSeat = seatNumber;
+
+
+    document.getElementById("selectedSeatText")
+        .innerText = seatNumber;
+
+}
+
+
+/* CONFIRM SEAT */
+
+function confirmSeat() {
+
+    if (selectedSeat === 0) {
+
+        alert("Please select a seat.");
+
+        return;
+    }
+
+
+    confirmedSeat = selectedSeat;
+
+
+    document.getElementById("bookingSelectedSeat")
+        .innerText = confirmedSeat;
+
+
+    closeSeatPopup();
+
+
+    document.getElementById("bookingResult")
+        .innerHTML =
+        "<div class='message'>Seat "
+        + confirmedSeat
+        + " selected. Now click Book Ticket.</div>";
+
+}
+
+
+/* CLOSE SEAT POPUP */
+
+function closeSeatPopup() {
+
+    document.getElementById("seatModal")
+        .style.display = "none";
+
+}
+
+
+/* BOOK TICKET */
+
+function bookTicket() {
+
+    let passengerName =
+        document.getElementById("passengerName")
+        .value.trim();
+
+
+    let age =
+        document.getElementById("age")
+        .value;
+
+
+    let contact =
+        document.getElementById("contact")
+        .value.trim();
+
+
+    let trainName =
+        document.getElementById("trainName")
+        .value.trim();
+
+
+    if (selectedSource === ""
+        || selectedDestination === "") {
+
+        document.getElementById("bookingResult")
+            .innerHTML =
+            "<p style='color:red;'>Please search Source and Destination first.</p>";
+
+        return;
+    }
+
+
+    if (passengerName === ""
+        || age === ""
+        || contact === ""
+        || trainName === "") {
+
+        document.getElementById("bookingResult")
+            .innerHTML =
+            "<p style='color:red;'>Please fill all booking details.</p>";
+
+        return;
+    }
+
+
+    fetch(
+
+        "/api/trains/book?"
+
+        + "trainName="
+        + encodeURIComponent(trainName)
+
+        + "&passengerName="
+        + encodeURIComponent(passengerName)
+
+        + "&age="
+        + encodeURIComponent(age)
+
+        + "&contact="
+        + encodeURIComponent(contact)
+
+        + "&source="
+        + encodeURIComponent(selectedSource)
+
+        + "&destination="
+        + encodeURIComponent(selectedDestination)
+
+        + "&seatNumber="
+        + encodeURIComponent(confirmedSeat),
+
+        {
+            method: "POST"
+        }
+
+    )
+
+    .then(response => {
+
+        if (!response.ok) {
+            throw new Error("Server error");
+        }
+
+        return response.text();
+
+    })
+
+    .then(message => {
+
+        document.getElementById("bookingResult")
+            .innerHTML =
+            "<div class='message'>"
+            + message
+            + "</div>";
+
+
+        confirmedSeat = 0;
+
+        selectedSeat = 0;
+
+        document.getElementById("bookingSelectedSeat")
+            .innerText = "None";
+
+    })
+
+    .catch(error => {
+
+        document.getElementById("bookingResult")
+            .innerHTML =
+            "<p style='color:red;'>Cannot connect to Java backend.</p>";
+
+        console.error(error);
+
+    });
+
+}
+
+
+/* CANCEL TICKET */
+
+function cancelTicket() {
+
+    let trainNumber =
+        document.getElementById("cancelTrainNumber")
+        .value;
+
+
+    let passengerName =
+        document.getElementById("cancelPassengerName")
+        .value.trim();
+
+
+    if (trainNumber === ""
+        || passengerName === "") {
+
+        document.getElementById("cancelResult")
+            .innerHTML =
+            "<p style='color:red;'>Please enter all details.</p>";
+
+        return;
+    }
+
+
+    fetch(
+
+        "/api/trains/cancel?"
+
+        + "trainNumber="
+        + encodeURIComponent(trainNumber)
+
+        + "&passengerName="
+        + encodeURIComponent(passengerName),
+
+        {
+            method: "POST"
+        }
+
+    )
+
+    .then(response => response.text())
+
+    .then(message => {
+
+        document.getElementById("cancelResult")
+            .innerHTML =
+            "<div class='message'>"
+            + message
+            + "</div>";
+
+    })
+
+    .catch(error => {
+
+        document.getElementById("cancelResult")
+            .innerHTML =
+            "<p style='color:red;'>Cannot connect to Java backend.</p>";
+
+        console.error(error);
+
+    });
+
+}
+
+
+/* VIEW BOOKINGS */
+
+function viewBookings() {
+
+    fetch("/api/trains/bookings")
+
+    .then(response => {
+
+        if (!response.ok) {
+            throw new Error("Server error");
+        }
+
+        return response.json();
+
+    })
+
+    .then(bookings => {
+
+        let list =
+            document.getElementById("bookingList");
+
+        list.innerHTML = "";
+
+
+        if (bookings.length === 0) {
+
+            list.innerHTML =
+                "<p>No bookings found.</p>";
+
+            return;
+        }
+
+
+        bookings.forEach(booking => {
+
+            list.innerHTML += `
+
+                <div class="booking-card">
+
+                    <h3>
+                        🎫 ${booking.trainName}
+                    </h3>
+
+                    <p>
+                        <b>Passenger:</b>
+                        ${booking.passengerName}
+                    </p>
+
+                    <p>
+                        <b>Age:</b>
+                        ${booking.age}
+                    </p>
+
+                    <p>
+                        <b>Contact:</b>
+                        ${booking.contact}
+                    </p>
+
+                    <p>
+                        <b>Train Number:</b>
+                        ${booking.trainNumber}
+                    </p>
+
+                    <p>
+                        <b>From:</b>
+                        ${booking.source}
+                    </p>
+
+                    <p>
+                        <b>To:</b>
+                        ${booking.destination}
+                    </p>
+
+                    <p class="time">
+                        🕐 Departure:
+                        ${booking.departureTime}
+                    </p>
+
+                    <p class="time">
+                        🕐 Arrival:
+                        ${booking.arrivalTime}
+                    </p>
+
+                    <p>
+                        <b>Seat:</b>
+                        ${booking.seatNumber}
+                    </p>
+
+                    <p>
+                        <b>Status:</b>
+                        ${booking.status}
+                    </p>
+
+                </div>
+
+            `;
+
+        });
+
+    })
+
+    .catch(error => {
+
+        document.getElementById("bookingList")
+            .innerHTML =
+            "<p style='color:red;'>Cannot connect to Java backend.</p>";
+
+        console.error(error);
+
+    });
+
+}
+
+
+/* LOGOUT */
+
+function logout() {
+
+    window.location.href = "index.html";
+
+}
+
+
+/* CLEAR DASHBOARD AND BACKEND BOOKINGS ON PAGE LOAD */
+
+window.addEventListener("load", function () {
+
+    /*
+     * Clear backend bookings, booked seats,
+     * and waiting lists first.
+     */
+    fetch("/api/trains/clearBookings")
+        .then(response => response.text())
+        .then(message => {
+            console.log(message);
+        })
+        .catch(error => {
+            console.error("Could not clear backend bookings:", error);
+        });
+
+
+    /* Clear dashboard fields */
+
+    document.getElementById("source").value = "";
+    document.getElementById("destination").value = "";
+
+    document.getElementById("passengerName").value = "";
+    document.getElementById("age").value = "";
+    document.getElementById("contact").value = "";
+    document.getElementById("trainName").value = "";
+
+    document.getElementById("cancelTrainNumber").value = "";
+    document.getElementById("cancelPassengerName").value = "";
+
+    document.getElementById("result").innerHTML = "";
+    document.getElementById("bookingResult").innerHTML = "";
+    document.getElementById("cancelResult").innerHTML = "";
+    document.getElementById("bookingList").innerHTML = "";
+
+    document.getElementById("selectedJourney").innerText =
+        "Please search a train first";
+
+    document.getElementById("bookingSelectedSeat").innerText =
+        "None";
+
+    document.getElementById("selectedSeatText").innerText =
+        "None";
+
+    selectedSource = "";
+    selectedDestination = "";
+    selectedTrainNumber = 0;
+    selectedSeat = 0;
+    confirmedSeat = 0;
+
+});
+
+</script>
+
+</body>
+
+</html>
